@@ -24,8 +24,8 @@ Built the fundamental document API without authentication:
    - Running on http://localhost:5072
 
 2. **Database Setup**
-   - SQL Server LocalDB
-   - Database: `DocumentApiDb`
+   - SQLite (cross-platform compatible)
+   - Database: `DocumentApi.db`
    - EF Core 9.0.10 with Code-First migrations
    - Entities: User, Role, UserRole, Document, EmailLog
 
@@ -106,7 +106,7 @@ Application is ready for testing:
 
 ## 📦 Packages Installed
 
-- **Microsoft.EntityFrameworkCore.SqlServer** (9.0.10)
+- **Microsoft.EntityFrameworkCore.Sqlite** (9.0.10)
 - **Microsoft.EntityFrameworkCore.Design** (9.0.10)
 - **Microsoft.AspNetCore.Authentication.JwtBearer** (8.0.11)
 - **BCrypt.Net-Next** (4.0.3)
@@ -287,7 +287,7 @@ Projekt/
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=DocumentApiDb;..."
+    "DefaultConnection": "Data Source=DocumentApi.db"
   },
   "Storage": {
     "RootPath": "./storage"
@@ -366,6 +366,6 @@ The Document API has been successfully implemented according to the plan. All co
 
 **Application URL:** http://localhost:5072
 **Swagger UI:** http://localhost:5072/swagger
-**Database:** DocumentApiDb (LocalDB)
+**Database:** DocumentApi.db (SQLite)
 **Status:** ✅ Running and Ready
 

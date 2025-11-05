@@ -28,7 +28,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.Email).IsUnique();
             entity.Property(e => e.PasswordHash).HasMaxLength(255).IsRequired();
             entity.Property(e => e.DisplayName).HasMaxLength(128);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.IsActive).HasDefaultValue(true);
         });
 
@@ -63,8 +63,8 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.OriginalFilename).HasMaxLength(255).IsRequired();
             entity.Property(e => e.ContentType).HasMaxLength(127).IsRequired();
             entity.Property(e => e.StorageKey).HasMaxLength(512).IsRequired();
-            entity.Property(e => e.UploadedAt).HasDefaultValueSql("GETUTCDATE()");
-            
+            entity.Property(e => e.UploadedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
             entity.HasOne(e => e.Owner)
                 .WithMany(u => u.Documents)
                 .HasForeignKey(e => e.OwnerUserId)
@@ -79,13 +79,13 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Status).HasMaxLength(32).IsRequired();
             entity.Property(e => e.ProviderMessageId).HasMaxLength(256);
             entity.Property(e => e.ErrorMessage).HasMaxLength(512);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-            
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
             entity.HasOne(e => e.Document)
                 .WithMany(d => d.EmailLogs)
                 .HasForeignKey(e => e.DocumentId)
                 .OnDelete(DeleteBehavior.Cascade);
-            
+
             entity.HasOne(e => e.Sender)
                 .WithMany(u => u.SentEmails)
                 .HasForeignKey(e => e.SenderUserId)

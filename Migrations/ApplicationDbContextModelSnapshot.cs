@@ -2,7 +2,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Projekt.Infrastructure.Data;
 
@@ -16,43 +15,39 @@ namespace Projekt.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.10")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.10");
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("DocumentApi.Infrastructure.Entities.Document", b =>
+            modelBuilder.Entity("Projekt.Infrastructure.Entities.Document", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ContentType")
                         .IsRequired()
                         .HasMaxLength(127)
-                        .HasColumnType("nvarchar(127)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("OriginalFilename")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("OwnerUserId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<long>("SizeBytes")
-                        .HasColumnType("bigint");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("StorageKey")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("UploadedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("Id");
 
@@ -61,40 +56,40 @@ namespace Projekt.Migrations
                     b.ToTable("Documents");
                 });
 
-            modelBuilder.Entity("DocumentApi.Infrastructure.Entities.EmailLog", b =>
+            modelBuilder.Entity("Projekt.Infrastructure.Entities.EmailLog", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<Guid>("DocumentId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ErrorMessage")
                         .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ProviderMessageId")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("RecipientEmail")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("SenderUserId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -105,18 +100,16 @@ namespace Projekt.Migrations
                     b.ToTable("EmailLogs");
                 });
 
-            modelBuilder.Entity("DocumentApi.Infrastructure.Entities.Role", b =>
+            modelBuilder.Entity("Projekt.Infrastructure.Entities.Role", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -126,35 +119,35 @@ namespace Projekt.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("DocumentApi.Infrastructure.Entities.User", b =>
+            modelBuilder.Entity("Projekt.Infrastructure.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("DisplayName")
                         .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(true);
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -164,13 +157,13 @@ namespace Projekt.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("DocumentApi.Infrastructure.Entities.UserRole", b =>
+            modelBuilder.Entity("Projekt.Infrastructure.Entities.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -179,9 +172,9 @@ namespace Projekt.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("DocumentApi.Infrastructure.Entities.Document", b =>
+            modelBuilder.Entity("Projekt.Infrastructure.Entities.Document", b =>
                 {
-                    b.HasOne("DocumentApi.Infrastructure.Entities.User", "Owner")
+                    b.HasOne("Projekt.Infrastructure.Entities.User", "Owner")
                         .WithMany("Documents")
                         .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -190,15 +183,15 @@ namespace Projekt.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("DocumentApi.Infrastructure.Entities.EmailLog", b =>
+            modelBuilder.Entity("Projekt.Infrastructure.Entities.EmailLog", b =>
                 {
-                    b.HasOne("DocumentApi.Infrastructure.Entities.Document", "Document")
+                    b.HasOne("Projekt.Infrastructure.Entities.Document", "Document")
                         .WithMany("EmailLogs")
                         .HasForeignKey("DocumentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DocumentApi.Infrastructure.Entities.User", "Sender")
+                    b.HasOne("Projekt.Infrastructure.Entities.User", "Sender")
                         .WithMany("SentEmails")
                         .HasForeignKey("SenderUserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -209,15 +202,15 @@ namespace Projekt.Migrations
                     b.Navigation("Sender");
                 });
 
-            modelBuilder.Entity("DocumentApi.Infrastructure.Entities.UserRole", b =>
+            modelBuilder.Entity("Projekt.Infrastructure.Entities.UserRole", b =>
                 {
-                    b.HasOne("DocumentApi.Infrastructure.Entities.Role", "Role")
+                    b.HasOne("Projekt.Infrastructure.Entities.Role", "Role")
                         .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DocumentApi.Infrastructure.Entities.User", "User")
+                    b.HasOne("Projekt.Infrastructure.Entities.User", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -228,17 +221,17 @@ namespace Projekt.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("DocumentApi.Infrastructure.Entities.Document", b =>
+            modelBuilder.Entity("Projekt.Infrastructure.Entities.Document", b =>
                 {
                     b.Navigation("EmailLogs");
                 });
 
-            modelBuilder.Entity("DocumentApi.Infrastructure.Entities.Role", b =>
+            modelBuilder.Entity("Projekt.Infrastructure.Entities.Role", b =>
                 {
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("DocumentApi.Infrastructure.Entities.User", b =>
+            modelBuilder.Entity("Projekt.Infrastructure.Entities.User", b =>
                 {
                     b.Navigation("Documents");
 

@@ -5,7 +5,7 @@
 ✅ **Swagger UI available at: http://localhost:5072/swagger**
 
 ## Database Setup
-- Database: `DocumentApiDb` (SQL Server LocalDB)
+- Database: `DocumentApi.db` (SQLite)
 - Roles seeded: `user` and `admin`
 - Ready for testing
 
@@ -225,11 +225,11 @@ Navigate to: http://localhost:5072/swagger
 
 ## Database Verification
 
-You can verify data in the database using SQL Server Management Studio or Visual Studio:
+You can verify data in the database using any SQLite browser tool (e.g., DB Browser for SQLite, SQLiteStudio, or VS Code extensions):
 
-**Connection String:**
+**Database File:**
 ```
-Server=(localdb)\mssqllocaldb;Database=DocumentApiDb;Trusted_Connection=true;
+DocumentApi.db (in the project root directory)
 ```
 
 **Useful Queries:**

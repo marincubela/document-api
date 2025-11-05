@@ -170,8 +170,8 @@ Authorization: Bearer {your-token-here}
 
 ## 🗄️ Database
 
-- **Server:** (localdb)\mssqllocaldb
-- **Database:** DocumentApiDb
+- **Type:** SQLite
+- **File:** DocumentApi.db
 - **Tables:** Users, Roles, UserRoles, Documents, EmailLogs
 
 ## 📁 File Storage
