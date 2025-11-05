@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Projekt.Auth;
 using Projekt.Dtos;
@@ -136,9 +137,6 @@ public class AuthController : ControllerBase
 
             // Generate JWT token
             var token = _jwtTokenService.GenerateToken(user, roles);
-            var expirationMinutes = int.Parse(_context.Database.GetDbConnection().ConnectionString.Contains("Jwt:ExpirationMinutes") 
-                ? "60" 
-                : "60");
 
             var response = new LoginResponse
             {
@@ -154,6 +152,86 @@ public class AuthController : ControllerBase
             _logger.LogError(ex, "Error during login");
             return StatusCode(StatusCodes.Status500InternalServerError,
                 new { error = "An error occurred during login" });
+        }
+    }
+
+    /// <summary>
+    /// Grant admin privileges to a user (Admin only)
+    /// </summary>
+    [Authorize(Roles = "admin")]
+    [HttpPost("grant-admin")]
+    [ProducesResponseType(typeof(GrantAdminResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> GrantAdmin([FromBody] GrantAdminRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            // Find user by email
+            var user = await _context.Users
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Email == request.Email);
+
+            if (user == null)
+            {
+                return NotFound(new { error = "User not found" });
+            }
+
+            // Check if user already has admin role
+            var hasAdminRole = user.UserRoles.Any(ur => ur.Role.Name == "admin");
+            if (hasAdminRole)
+            {
+                return Conflict(new { error = "User already has admin privileges" });
+            }
+
+            // Get admin role
+            var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "admin");
+            if (adminRole == null)
+            {
+                _logger.LogError("Admin role not found in database");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { error = "Admin role not configured in the system" });
+            }
+
+            // Add admin role to user
+            _context.UserRoles.Add(new UserRole
+            {
+                UserId = user.Id,
+                RoleId = adminRole.Id
+            });
+
+            await _context.SaveChangesAsync();
+
+            // Get updated roles list
+            var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
+            roles.Add("admin"); // Add the newly granted role
+
+            var response = new GrantAdminResponse
+            {
+                UserId = user.Id,
+                Email = user.Email,
+                DisplayName = user.DisplayName,
+                Roles = roles
+            };
+
+            _logger.LogInformation("Admin privileges granted to user {Email} by admin", user.Email);
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error granting admin privileges");
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new { error = "An error occurred while granting admin privileges" });
         }
     }
 }
