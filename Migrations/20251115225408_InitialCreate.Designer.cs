@@ -11,7 +11,7 @@ using Projekt.Infrastructure.Data;
 namespace Projekt.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251105193729_InitialCreate")]
+    [Migration("20251115225408_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -128,11 +128,6 @@ namespace Projekt.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
                     b.Property<string>("DisplayName")
                         .HasMaxLength(128)
                         .HasColumnType("TEXT");
@@ -141,11 +136,6 @@ namespace Projekt.Migrations
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(true);
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()

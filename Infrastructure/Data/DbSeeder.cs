@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Projekt.Infrastructure.Entities;
 
 namespace Projekt.Infrastructure.Data;
@@ -21,7 +22,7 @@ public static class DbSeeder
         }
 
         // Seed Admin User
-        var adminEmail = "admin@documentapi.com";
+        var adminEmail = "admin@mail.com";
         var adminUser = await context.Users
             .Include(u => u.UserRoles)
             .FirstOrDefaultAsync(u => u.Email == adminEmail);
@@ -29,7 +30,7 @@ public static class DbSeeder
         if (adminUser == null)
         {
             // Create admin user
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!");
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword("admin123");
 
             adminUser = new User
             {
@@ -37,8 +38,6 @@ public static class DbSeeder
                 Email = adminEmail,
                 PasswordHash = passwordHash,
                 DisplayName = "System Administrator",
-                CreatedAt = DateTime.UtcNow,
-                IsActive = true
             };
 
             context.Users.Add(adminUser);

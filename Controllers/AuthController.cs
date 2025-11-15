@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Projekt.Auth;
@@ -30,15 +31,8 @@ public class AuthController : ControllerBase
     /// Register a new user
     /// </summary>
     [HttpPost("register")]
-    [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         // Check if user already exists
         if (await _context.Users.AnyAsync(u => u.Email == request.Email))
         {
@@ -57,14 +51,13 @@ public class AuthController : ControllerBase
                 Email = request.Email,
                 PasswordHash = passwordHash,
                 DisplayName = request.DisplayName,
-                CreatedAt = DateTime.UtcNow,
-                IsActive = true
             };
 
             _context.Users.Add(user);
 
             // Assign default "user" role
             var userRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "user");
+
             if (userRole != null)
             {
                 _context.UserRoles.Add(new UserRole
@@ -97,16 +90,8 @@ public class AuthController : ControllerBase
     /// Login and get JWT token
     /// </summary>
     [HttpPost("login")]
-    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         try
         {
             // Find user
@@ -124,12 +109,6 @@ public class AuthController : ControllerBase
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
                 return Unauthorized(new { error = "Invalid email or password" });
-            }
-
-            // Check if user is active
-            if (!user.IsActive)
-            {
-                return Unauthorized(new { error = "User account is inactive" });
             }
 
             // Get user roles
@@ -160,19 +139,8 @@ public class AuthController : ControllerBase
     /// </summary>
     [Authorize(Roles = "admin")]
     [HttpPost("grant-admin")]
-    [ProducesResponseType(typeof(GrantAdminResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> GrantAdmin([FromBody] GrantAdminRequest request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         try
         {
             // Find user by email
@@ -213,7 +181,6 @@ public class AuthController : ControllerBase
 
             // Get updated roles list
             var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
-            roles.Add("admin"); // Add the newly granted role
 
             var response = new GrantAdminResponse
             {

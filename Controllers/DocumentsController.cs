@@ -42,11 +42,6 @@ public class DocumentsController : ControllerBase
     /// </summary>
     [Authorize]
     [HttpPost]
-    [Consumes("multipart/form-data")]
-    [ProducesResponseType(typeof(DocumentDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status413PayloadTooLarge)]
-    [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
     public async Task<IActionResult> UploadDocument(IFormFile file)
     {
         // Validate file exists
@@ -130,9 +125,6 @@ public class DocumentsController : ControllerBase
     /// </summary>
     [Authorize]
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(DocumentDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetDocument(Guid id, [FromQuery] bool download = false)
     {
         var document = await _context.Documents
@@ -181,18 +173,8 @@ public class DocumentsController : ControllerBase
     /// </summary>
     [Authorize]
     [HttpPost("{id}/send")]
-    [ProducesResponseType(typeof(SendEmailResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> SendDocument(Guid id, [FromBody] SendEmailRequest request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         var document = await _context.Documents
             .Include(d => d.Owner)
             .FirstOrDefaultAsync(d => d.Id == id);
@@ -286,15 +268,10 @@ public class DocumentsController : ControllerBase
         return userId;
     }
 
-    private bool IsAdmin()
-    {
-        return User.IsInRole("admin");
-    }
-
     private Task<bool> CanAccessDocumentAsync(Guid documentOwnerId)
     {
         // Admins can access any document
-        if (IsAdmin())
+        if (User.IsInRole("admin"))
         {
             return Task.FromResult(true);
         }
