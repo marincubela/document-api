@@ -10,6 +10,5 @@ public class User
     // Navigation properties
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<Document> Documents { get; set; } = new List<Document>();
-    public ICollection<EmailLog> SentEmails { get; set; } = new List<EmailLog>();
 }
 

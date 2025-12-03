@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Projekt.Infrastructure.Entities;
 
 namespace Projekt.Infrastructure.Data;

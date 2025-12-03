@@ -12,6 +12,5 @@ public class Document
 
     // Navigation properties
     public User Owner { get; set; } = null!;
-    public ICollection<EmailLog> EmailLogs { get; set; } = new List<EmailLog>();
 }
 

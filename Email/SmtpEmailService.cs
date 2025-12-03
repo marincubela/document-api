@@ -6,15 +6,13 @@ namespace Projekt.Email;
 public class SmtpEmailService : IEmailService
 {
     private readonly IConfiguration _configuration;
-    private readonly ILogger<SmtpEmailService> _logger;
 
-    public SmtpEmailService(IConfiguration configuration, ILogger<SmtpEmailService> logger)
+    public SmtpEmailService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _logger = logger;
     }
 
-    public async Task<(bool Success, string? MessageId, string? ErrorMessage)> SendEmailWithAttachmentAsync(
+    public async Task<bool> SendEmailWithAttachmentAsync(
         string to,
         string subject,
         string body,
@@ -58,17 +56,11 @@ public class SmtpEmailService : IEmailService
 
             await smtpClient.SendMailAsync(message, cancellationToken);
 
-            _logger.LogInformation("Email sent successfully to {To}", to);
-
-            // Generate a simple message ID
-            var messageId = Guid.NewGuid().ToString();
-            
-            return (true, messageId, null);
+            return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send email to {To}", to);
-            return (false, null, ex.Message);
+            return false;
         }
     }
 }

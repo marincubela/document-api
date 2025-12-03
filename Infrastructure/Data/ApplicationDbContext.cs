@@ -14,7 +14,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<Role> Roles { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
     public DbSet<Document> Documents { get; set; }
-    public DbSet<EmailLog> EmailLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -67,27 +66,6 @@ public class ApplicationDbContext : DbContext
                 .WithMany(u => u.Documents)
                 .HasForeignKey(e => e.OwnerUserId)
                 .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        // EmailLog configuration
-        modelBuilder.Entity<EmailLog>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.RecipientEmail).HasMaxLength(256).IsRequired();
-            entity.Property(e => e.Status).HasMaxLength(32).IsRequired();
-            entity.Property(e => e.ProviderMessageId).HasMaxLength(256);
-            entity.Property(e => e.ErrorMessage).HasMaxLength(512);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-            entity.HasOne(e => e.Document)
-                .WithMany(d => d.EmailLogs)
-                .HasForeignKey(e => e.DocumentId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Sender)
-                .WithMany(u => u.SentEmails)
-                .HasForeignKey(e => e.SenderUserId)
-                .OnDelete(DeleteBehavior.NoAction); // Prevent multiple cascade paths
         });
     }
 }

@@ -5,7 +5,7 @@ public interface IEmailService
     /// <summary>
     /// Sends an email with an attachment
     /// </summary>
-    Task<(bool Success, string? MessageId, string? ErrorMessage)> SendEmailWithAttachmentAsync(
+    Task<bool> SendEmailWithAttachmentAsync(
         string to,
         string subject,
         string body,

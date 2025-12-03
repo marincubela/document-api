@@ -17,9 +17,8 @@ public class DocumentsController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly IFileStorage _fileStorage;
     private readonly IEmailService _emailService;
-    private readonly ILogger<DocumentsController> _logger;
-    private const long MaxFileSize = 20 * 1024 * 1024; // 20 MB
-    private static readonly string[] AllowedContentTypes = 
+
+    private static readonly string[] AllowedContentTypes =
     {
         "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -28,13 +27,11 @@ public class DocumentsController : ControllerBase
     public DocumentsController(
         ApplicationDbContext context,
         IFileStorage fileStorage,
-        IEmailService emailService,
-        ILogger<DocumentsController> logger)
+        IEmailService emailService)
     {
         _context = context;
         _fileStorage = fileStorage;
         _emailService = emailService;
-        _logger = logger;
     }
 
     /// <summary>
@@ -44,23 +41,10 @@ public class DocumentsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> UploadDocument(IFormFile file)
     {
-        // Validate file exists
-        if (file == null || file.Length == 0)
-        {
-            return BadRequest(new { error = "No file provided" });
-        }
-
-        // Validate file size
-        if (file.Length > MaxFileSize)
-        {
-            return StatusCode(StatusCodes.Status413PayloadTooLarge, 
-                new { error = $"File size exceeds maximum allowed size of {MaxFileSize / 1024 / 1024} MB" });
-        }
-
         // Validate content type
         if (!AllowedContentTypes.Contains(file.ContentType))
         {
-            return StatusCode(StatusCodes.Status415UnsupportedMediaType, 
+            return StatusCode(StatusCodes.Status415UnsupportedMediaType,
                 new { error = $"File type '{file.ContentType}' is not supported. Allowed types: PDF, DOCX" });
         }
 
@@ -68,56 +52,47 @@ public class DocumentsController : ControllerBase
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (extension != ".pdf" && extension != ".docx")
         {
-            return StatusCode(StatusCodes.Status415UnsupportedMediaType, 
+            return StatusCode(StatusCodes.Status415UnsupportedMediaType,
                 new { error = "File extension must be .pdf or .docx" });
         }
 
-        try
+        var documentId = Guid.NewGuid();
+
+        // Save file to storage
+        string storageKey;
+        await using (var stream = file.OpenReadStream())
         {
-            var documentId = Guid.NewGuid();
-            
-            // Save file to storage
-            string storageKey;
-            await using (var stream = file.OpenReadStream())
-            {
-                storageKey = await _fileStorage.SaveFileAsync(stream, file.FileName, documentId);
-            }
-
-            // Get authenticated user ID
-            var userId = GetAuthenticatedUserId();
-
-            // Create document metadata
-            var document = new Document
-            {
-                Id = documentId,
-                OwnerUserId = userId,
-                OriginalFilename = file.FileName,
-                ContentType = file.ContentType,
-                SizeBytes = file.Length,
-                StorageKey = storageKey,
-                UploadedAt = DateTime.UtcNow
-            };
-
-            _context.Documents.Add(document);
-            await _context.SaveChangesAsync();
-
-            var dto = new DocumentDto
-            {
-                DocumentId = document.Id,
-                Filename = document.OriginalFilename,
-                ContentType = document.ContentType,
-                SizeBytes = document.SizeBytes,
-                UploadedAt = document.UploadedAt
-            };
-
-            return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, dto);
+            storageKey = await _fileStorage.SaveFileAsync(stream, file.FileName, documentId);
         }
-        catch (Exception ex)
+
+        // Get authenticated user ID
+        var userId = GetAuthenticatedUserId();
+
+        // Create document metadata
+        var document = new Document
         {
-            _logger.LogError(ex, "Error uploading document");
-            return StatusCode(StatusCodes.Status500InternalServerError, 
-                new { error = "An error occurred while uploading the document" });
-        }
+            Id = documentId,
+            OwnerUserId = userId,
+            OriginalFilename = file.FileName,
+            ContentType = file.ContentType,
+            SizeBytes = file.Length,
+            StorageKey = storageKey,
+            UploadedAt = DateTime.UtcNow
+        };
+
+        _context.Documents.Add(document);
+        await _context.SaveChangesAsync();
+
+        var dto = new DocumentDto
+        {
+            DocumentId = document.Id,
+            Filename = document.OriginalFilename,
+            ContentType = document.ContentType,
+            SizeBytes = document.SizeBytes,
+            UploadedAt = document.UploadedAt
+        };
+
+        return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, dto);
     }
 
     /// <summary>
@@ -150,7 +125,6 @@ public class DocumentsController : ControllerBase
             }
             catch (FileNotFoundException)
             {
-                _logger.LogError("File not found in storage for document {DocumentId}", id);
                 return NotFound(new { error = "Document file not found in storage" });
             }
         }
@@ -190,69 +164,35 @@ public class DocumentsController : ControllerBase
             return Forbid();
         }
 
-        try
+        // Get file stream
+        var fileStream = await _fileStorage.GetFileAsync(document.StorageKey);
+
+        // Prepare email
+        var subject = request.Subject ?? $"Document: {document.OriginalFilename}";
+        var body = request.Message ?? $"Please find attached the document '{document.OriginalFilename}'.";
+
+        // Send email
+        var success = await _emailService.SendEmailWithAttachmentAsync(
+            request.To,
+            subject,
+            body,
+            fileStream,
+            document.OriginalFilename,
+            document.ContentType
+        );
+
+        if (!success)
         {
-            // Get file stream
-            var fileStream = await _fileStorage.GetFileAsync(document.StorageKey);
-
-            // Prepare email
-            var subject = request.Subject ?? $"Document: {document.OriginalFilename}";
-            var body = request.Message ?? $"Please find attached the document '{document.OriginalFilename}'.";
-
-            // Send email
-            var (success, messageId, errorMessage) = await _emailService.SendEmailWithAttachmentAsync(
-                request.To,
-                subject,
-                body,
-                fileStream,
-                document.OriginalFilename,
-                document.ContentType
-            );
-
-            // Log email attempt
-            var emailLog = new EmailLog
-            {
-                Id = Guid.NewGuid(),
-                DocumentId = document.Id,
-                SenderUserId = document.OwnerUserId,
-                RecipientEmail = request.To,
-                Status = success ? "sent" : "failed",
-                ProviderMessageId = messageId,
-                ErrorMessage = errorMessage,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _context.EmailLogs.Add(emailLog);
-            await _context.SaveChangesAsync();
-
-            if (success)
-            {
-                var response = new SendEmailResponse
-                {
-                    Status = "sent",
-                    Recipient = request.To,
-                    ProviderMessageId = messageId
-                };
-
-                return Ok(response);
-            }
-            else
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { error = "Failed to send email", details = errorMessage });
-            }
-        }
-        catch (FileNotFoundException)
-        {
-            _logger.LogError("File not found in storage for document {DocumentId}", id);
-            return NotFound(new { error = "Document file not found in storage" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error sending document {DocumentId} via email", id);
             return StatusCode(StatusCodes.Status500InternalServerError,
-                new { error = "An error occurred while sending the email" });
+                new { error = "Failed to send email" });
         }
+        var response = new SendEmailResponse
+        {
+            Status = "sent",
+            Recipient = request.To
+        };
+
+        return Ok(response);
     }
 
     private Guid GetAuthenticatedUserId()
@@ -281,4 +221,3 @@ public class DocumentsController : ControllerBase
         return Task.FromResult(userId == documentOwnerId);
     }
 }
-

@@ -17,20 +17,13 @@ public class LocalFileStorage : IFileStorage
 
     public async Task<string> SaveFileAsync(Stream fileStream, string fileName, Guid documentId, CancellationToken cancellationToken = default)
     {
-        // Sanitize filename
-        var safeFileName = SanitizeFileName(fileName);
-        
-        // Create storage path: yyyy/MM/dd/{documentId}/{safeFileName}
-        var now = DateTime.UtcNow;
-        var relativePath = Path.Combine(
-            now.Year.ToString(),
-            now.Month.ToString("D2"),
-            now.Day.ToString("D2"),
-            documentId.ToString(),
-            safeFileName
-        );
+        // Create relative path. This will be used as a storage key as well.
+        var relativePath = Path.Combine(documentId.ToString(), fileName);
 
+        // Combine with root path to get full path
         var fullPath = Path.Combine(_rootPath, relativePath);
+        
+        // Ensure directory exists
         var directory = Path.GetDirectoryName(fullPath);
         
         if (directory != null && !Directory.Exists(directory))
@@ -38,29 +31,13 @@ public class LocalFileStorage : IFileStorage
             Directory.CreateDirectory(directory);
         }
 
-        // Write to temp file first, then move (atomic operation)
-        var tempPath = fullPath + ".tmp";
-        
-        try
-        {
-            await using (var fileStreamOut = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
-            {
-                await fileStream.CopyToAsync(fileStreamOut, cancellationToken);
-            }
+        // Write file to a given path.
+        await using var fileStreamOut = new FileStream(fullPath, FileMode.Create);
 
-            // Move temp file to final location
-            File.Move(tempPath, fullPath, overwrite: true);
-        }
-        catch
-        {
-            // Clean up temp file if it exists
-            if (File.Exists(tempPath))
-            {
-                File.Delete(tempPath);
-            }
-            throw;
-        }
+        // We copy the sent stream (file) to the output stream (file on disk where we save it).
+        await fileStream.CopyToAsync(fileStreamOut, cancellationToken);
 
+        // Return the storage key.
         return relativePath;
     }
 
@@ -73,7 +50,7 @@ public class LocalFileStorage : IFileStorage
             throw new FileNotFoundException("File not found in storage", storageKey);
         }
 
-        Stream stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
+        Stream stream = new FileStream(fullPath, FileMode.Open);
         return Task.FromResult(stream);
     }
 
@@ -93,23 +70,6 @@ public class LocalFileStorage : IFileStorage
     {
         var fullPath = Path.Combine(_rootPath, storageKey);
         return Task.FromResult(File.Exists(fullPath));
-    }
-
-    private static string SanitizeFileName(string fileName)
-    {
-        // Remove invalid characters
-        var invalidChars = Path.GetInvalidFileNameChars();
-        var sanitized = string.Join("_", fileName.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
-        
-        // Limit length
-        if (sanitized.Length > 200)
-        {
-            var extension = Path.GetExtension(sanitized);
-            var nameWithoutExtension = Path.GetFileNameWithoutExtension(sanitized);
-            sanitized = nameWithoutExtension.Substring(0, 200 - extension.Length) + extension;
-        }
-
-        return sanitized;
     }
 }
 

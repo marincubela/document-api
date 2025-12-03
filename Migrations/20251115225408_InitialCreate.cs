@@ -85,49 +85,10 @@ namespace Projekt.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "EmailLogs",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    DocumentId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    SenderUserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    RecipientEmail = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
-                    Status = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    ProviderMessageId = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    ErrorMessage = table.Column<string>(type: "TEXT", maxLength: 512, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_EmailLogs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_EmailLogs_Documents_DocumentId",
-                        column: x => x.DocumentId,
-                        principalTable: "Documents",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_EmailLogs_Users_SenderUserId",
-                        column: x => x.SenderUserId,
-                        principalTable: "Users",
-                        principalColumn: "Id");
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_Documents_OwnerUserId",
                 table: "Documents",
                 column: "OwnerUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EmailLogs_DocumentId",
-                table: "EmailLogs",
-                column: "DocumentId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EmailLogs_SenderUserId",
-                table: "EmailLogs",
-                column: "SenderUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Roles_Name",
@@ -150,9 +111,6 @@ namespace Projekt.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "EmailLogs");
-
             migrationBuilder.DropTable(
                 name: "UserRoles");
 

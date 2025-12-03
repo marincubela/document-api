@@ -59,50 +59,6 @@ namespace Projekt.Migrations
                     b.ToTable("Documents");
                 });
 
-            modelBuilder.Entity("Projekt.Infrastructure.Entities.EmailLog", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<Guid>("DocumentId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasMaxLength(512)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProviderMessageId")
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("RecipientEmail")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("SenderUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DocumentId");
-
-                    b.HasIndex("SenderUserId");
-
-                    b.ToTable("EmailLogs");
-                });
-
             modelBuilder.Entity("Projekt.Infrastructure.Entities.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -176,25 +132,6 @@ namespace Projekt.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("Projekt.Infrastructure.Entities.EmailLog", b =>
-                {
-                    b.HasOne("Projekt.Infrastructure.Entities.Document", "Document")
-                        .WithMany("EmailLogs")
-                        .HasForeignKey("DocumentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Projekt.Infrastructure.Entities.User", "Sender")
-                        .WithMany("SentEmails")
-                        .HasForeignKey("SenderUserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Document");
-
-                    b.Navigation("Sender");
-                });
-
             modelBuilder.Entity("Projekt.Infrastructure.Entities.UserRole", b =>
                 {
                     b.HasOne("Projekt.Infrastructure.Entities.Role", "Role")
@@ -214,11 +151,6 @@ namespace Projekt.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Projekt.Infrastructure.Entities.Document", b =>
-                {
-                    b.Navigation("EmailLogs");
-                });
-
             modelBuilder.Entity("Projekt.Infrastructure.Entities.Role", b =>
                 {
                     b.Navigation("UserRoles");
@@ -227,8 +159,6 @@ namespace Projekt.Migrations
             modelBuilder.Entity("Projekt.Infrastructure.Entities.User", b =>
                 {
                     b.Navigation("Documents");
-
-                    b.Navigation("SentEmails");
 
                     b.Navigation("UserRoles");
                 });

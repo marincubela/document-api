@@ -1,13 +1,11 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Projekt.Infrastructure.Data;
 using Projekt.Storage;
 using Projekt.Email;
 using Projekt.Auth;
-using Projekt.Infrastructure.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
